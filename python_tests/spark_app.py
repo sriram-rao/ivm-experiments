@@ -14,13 +14,13 @@ def foreach_batch_function(df, epoch_id):
     df.show()
 
 
-if __name__ == "__main__":
+def spark_request():
     spark = SparkSession \
         .builder \
         .appName("StructuredNetworkWordCount") \
         .getOrCreate()
 
-    userSchema = StructType()\
+    user_schema = StructType()\
         .add("order_id", "integer")\
         .add("product_id", "integer")\
         .add("unit_price", "float")\
@@ -28,20 +28,20 @@ if __name__ == "__main__":
         .add("discount", "float")\
         .add("number", "integer")
 
-    csvDF = spark \
+    csv_df = spark \
         .readStream \
         .option("sep", ",") \
-        .schema(userSchema) \
+        .schema(user_schema) \
         .option('maxFilesPerTrigger', '1')\
         .csv("/home/sriram/code/spark-3.0.1-bin-hadoop3.2/input/")
 
     # .option('includeTimestamp', 'true') \
     # Generate running word count
 
-    timeDf = csvDF.withColumn("time_column", current_timestamp()).withWatermark("time_column", "5 seconds")
+    time_df = csv_df.withColumn("time_column", current_timestamp()).withWatermark("time_column", "5 seconds")
 
-    quantities = timeDf.groupBy(
-        window(timeDf.time_column, '20 seconds', '10 seconds')
+    quantities = time_df.groupBy(
+        window(time_df.time_column, '20 seconds', '10 seconds')
     ).sum("quantity")
 
     # selection = csvDF.limit(10)\
